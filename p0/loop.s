@@ -16,66 +16,66 @@ ___init__:                              ; @__init__
 	adrp	x0, l_str.0@PAGE
 	add	x0, x0, l_str.0@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #232]
-	ldr	x8, [sp, #232]
+	str	x0, [sp, #192]
+	ldr	x8, [sp, #192]
 	str	x8, [sp, #56]                   ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp, #56]                   ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #344]
+	str	x0, [sp, #328]
 	mov	x0, #0                          ; =0x0
 	str	x0, [sp, #64]                   ; 8-byte Folded Spill
 	bl	_rt_imm
-	str	x0, [sp, #176]
+	str	x0, [sp, #200]
 	bl	_rt_new_arr
-	str	x0, [sp, #280]
-	ldr	x0, [sp, #280]
-	ldr	x1, [sp, #176]
+	str	x0, [sp, #224]
+	ldr	x0, [sp, #224]
+	ldr	x1, [sp, #200]
+	bl	_rt_append_item
+	ldr	x0, [sp, #64]                   ; 8-byte Folded Reload
+	bl	_rt_imm
+	str	x0, [sp, #184]
+	ldr	x0, [sp, #224]
+	ldr	x1, [sp, #184]
+	bl	_rt_append_item
+	ldr	x0, [sp, #64]                   ; 8-byte Folded Reload
+	bl	_rt_imm
+	str	x0, [sp, #72]
+	ldr	x0, [sp, #224]
+	ldr	x1, [sp, #72]
+	bl	_rt_append_item
+	ldr	x0, [sp, #64]                   ; 8-byte Folded Reload
+	bl	_rt_imm
+	str	x0, [sp, #120]
+	ldr	x0, [sp, #224]
+	ldr	x1, [sp, #120]
 	bl	_rt_append_item
 	ldr	x0, [sp, #64]                   ; 8-byte Folded Reload
 	bl	_rt_imm
 	str	x0, [sp, #216]
-	ldr	x0, [sp, #280]
+	ldr	x0, [sp, #224]
 	ldr	x1, [sp, #216]
 	bl	_rt_append_item
 	ldr	x0, [sp, #64]                   ; 8-byte Folded Reload
+	ldr	x8, [sp, #224]
+	str	x8, [sp, #344]
 	bl	_rt_imm
-	str	x0, [sp, #160]
-	ldr	x0, [sp, #280]
-	ldr	x1, [sp, #160]
-	bl	_rt_append_item
-	ldr	x0, [sp, #64]                   ; 8-byte Folded Reload
-	bl	_rt_imm
-	str	x0, [sp, #152]
-	ldr	x0, [sp, #280]
-	ldr	x1, [sp, #152]
-	bl	_rt_append_item
-	ldr	x0, [sp, #64]                   ; 8-byte Folded Reload
-	bl	_rt_imm
-	str	x0, [sp, #80]
-	ldr	x0, [sp, #280]
-	ldr	x1, [sp, #80]
-	bl	_rt_append_item
-	ldr	x0, [sp, #64]                   ; 8-byte Folded Reload
-	ldr	x8, [sp, #280]
-	str	x8, [sp, #144]
-	bl	_rt_imm
-	str	x0, [sp, #328]
-	ldr	x8, [sp, #328]
-	str	x8, [sp, #192]
+	str	x0, [sp, #136]
+	ldr	x8, [sp, #136]
+	str	x8, [sp, #160]
 	b	LBB0_1
 LBB0_1:                                 ; %L1
                                         ; =>This Inner Loop Header: Depth=1
 	mov	w8, #5                          ; =0x5
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #120]
-	ldr	x0, [sp, #192]
-	ldr	x1, [sp, #120]
+	str	x0, [sp, #176]
+	ldr	x0, [sp, #160]
+	ldr	x1, [sp, #176]
 	bl	_rt_cmp_lt
-	str	x0, [sp, #88]
-	ldr	x0, [sp, #88]
+	str	x0, [sp, #168]
+	ldr	x0, [sp, #168]
 	bl	_rt_is_truthy
 	tbz	w0, #0, LBB0_7
 	b	LBB0_2
@@ -87,25 +87,25 @@ LBB0_3:                                 ; %L3
 	mov	w8, #1                          ; =0x1
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #112]
-	ldr	x0, [sp, #192]
-	ldr	x1, [sp, #112]
+	str	x0, [sp, #96]
+	ldr	x0, [sp, #160]
+	ldr	x1, [sp, #96]
 	bl	_rt_add
-	str	x0, [sp, #136]
-	ldr	x8, [sp, #136]
-	str	x8, [sp, #192]
+	str	x0, [sp, #304]
+	ldr	x8, [sp, #304]
+	str	x8, [sp, #160]
 	b	LBB0_1
 LBB0_4:                                 ; %L2
                                         ;   in Loop: Header=BB0_1 Depth=1
 	mov	w8, #2                          ; =0x2
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #320]
-	ldr	x0, [sp, #192]
-	ldr	x1, [sp, #320]
+	str	x0, [sp, #128]
+	ldr	x0, [sp, #160]
+	ldr	x1, [sp, #128]
 	bl	_rt_cmp_eq
-	str	x0, [sp, #256]
-	ldr	x0, [sp, #256]
+	str	x0, [sp, #288]
+	ldr	x0, [sp, #288]
 	bl	_rt_is_truthy
 	tbz	w0, #0, LBB0_6
 	b	LBB0_5
@@ -117,24 +117,24 @@ LBB0_6:                                 ; %L5
 	mov	w8, #10                         ; =0xa
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #240]
-	ldr	x0, [sp, #192]
-	ldr	x1, [sp, #240]
+	str	x0, [sp, #296]
+	ldr	x0, [sp, #160]
+	ldr	x1, [sp, #296]
 	bl	_rt_mul
-	str	x0, [sp, #312]
-	ldr	x0, [sp, #144]
-	ldr	x1, [sp, #192]
-	ldr	x2, [sp, #312]
+	str	x0, [sp, #320]
+	ldr	x0, [sp, #344]
+	ldr	x1, [sp, #160]
+	ldr	x2, [sp, #320]
 	bl	_rt_set_item
 	b	LBB0_3
 LBB0_7:                                 ; %L4
 	adrp	x0, l_str.1@PAGE
 	add	x0, x0, l_str.1@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #248]
-	ldr	x8, [sp, #248]
+	str	x0, [sp, #240]
+	ldr	x8, [sp, #240]
 	str	x8, [sp, #32]                   ; 8-byte Folded Spill
-	ldr	x8, [sp, #144]
+	ldr	x8, [sp, #344]
 	str	x8, [sp, #40]                   ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp, #32]                   ; 8-byte Folded Reload
@@ -142,23 +142,23 @@ LBB0_7:                                 ; %L4
 	ldr	x0, [sp, #40]                   ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #224]
+	str	x0, [sp, #232]
 	adrp	x0, l_str.2@PAGE
 	add	x0, x0, l_str.2@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #208]
-	ldr	x8, [sp, #208]
+	str	x0, [sp, #152]
+	ldr	x8, [sp, #152]
 	str	x8, [sp, #48]                   ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp, #48]                   ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #288]
+	str	x0, [sp, #272]
 	mov	x0, #0                          ; =0x0
 	bl	_rt_imm
-	str	x0, [sp, #272]
-	ldr	x8, [sp, #272]
-	str	x8, [sp, #104]
+	str	x0, [sp, #112]
+	ldr	x8, [sp, #112]
+	str	x8, [sp, #256]
 	b	LBB0_8
 LBB0_8:                                 ; %L6
                                         ; =>This Inner Loop Header: Depth=1
@@ -175,22 +175,22 @@ LBB0_9:                                 ; %fallthrough.3
 	mov	w8, #1                          ; =0x1
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #304]
-	ldr	x0, [sp, #104]
-	ldr	x1, [sp, #304]
+	str	x0, [sp, #312]
+	ldr	x0, [sp, #256]
+	ldr	x1, [sp, #312]
 	bl	_rt_add
-	str	x0, [sp, #184]
-	ldr	x8, [sp, #184]
-	str	x8, [sp, #104]
+	str	x0, [sp, #104]
+	ldr	x8, [sp, #104]
+	str	x8, [sp, #256]
 	mov	w8, #3                          ; =0x3
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #296]
-	ldr	x0, [sp, #104]
-	ldr	x1, [sp, #296]
+	str	x0, [sp, #144]
+	ldr	x0, [sp, #256]
+	ldr	x1, [sp, #144]
 	bl	_rt_cmp_gt
-	str	x0, [sp, #336]
-	ldr	x0, [sp, #336]
+	str	x0, [sp, #248]
+	ldr	x0, [sp, #248]
 	bl	_rt_is_truthy
 	tbz	w0, #0, LBB0_11
 	b	LBB0_10
@@ -201,16 +201,16 @@ LBB0_11:                                ; %L8
 	adrp	x0, l_str.3@PAGE
 	add	x0, x0, l_str.3@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #200]
-	ldr	x8, [sp, #200]
+	str	x0, [sp, #280]
+	ldr	x8, [sp, #280]
 	str	x8, [sp, #8]                    ; 8-byte Folded Spill
-	ldr	x8, [sp, #104]
+	ldr	x8, [sp, #256]
 	str	x8, [sp, #16]                   ; 8-byte Folded Spill
 	adrp	x0, l_str.4@PAGE
 	add	x0, x0, l_str.4@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #168]
-	ldr	x8, [sp, #168]
+	str	x0, [sp, #208]
+	ldr	x8, [sp, #208]
 	str	x8, [sp, #24]                   ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp, #8]                    ; 8-byte Folded Reload
@@ -220,20 +220,20 @@ LBB0_11:                                ; %L8
 	ldr	x0, [sp, #24]                   ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #96]
+	str	x0, [sp, #80]
 	b	LBB0_8
 LBB0_12:                                ; %L7
 	adrp	x0, l_str.5@PAGE
 	add	x0, x0, l_str.5@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #128]
-	ldr	x8, [sp, #128]
+	str	x0, [sp, #336]
+	ldr	x8, [sp, #336]
 	str	x8, [sp]                        ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp]                        ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #72]
+	str	x0, [sp, #88]
 	mov	x0, #0                          ; =0x0
 	ldp	x29, x30, [sp, #368]            ; 16-byte Folded Reload
 	ldp	x28, x27, [sp, #352]            ; 16-byte Folded Reload

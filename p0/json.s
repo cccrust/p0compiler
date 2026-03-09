@@ -10,23 +10,23 @@ _get_first_score:                       ; @get_first_score
 	.cfi_def_cfa_offset 64
 	.cfi_offset w30, -8
 	.cfi_offset w29, -16
-	str	x0, [sp, #16]
+	str	x0, [sp, #32]
 	adrp	x0, l_str.0@PAGE
 	add	x0, x0, l_str.0@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #8]
-	ldr	x0, [sp, #16]
-	ldr	x1, [sp, #8]
-	bl	_rt_get_item
 	str	x0, [sp, #40]
+	ldr	x0, [sp, #32]
+	ldr	x1, [sp, #40]
+	bl	_rt_get_item
+	str	x0, [sp, #8]
 	mov	x0, #0                          ; =0x0
 	bl	_rt_imm
-	str	x0, [sp, #24]
-	ldr	x0, [sp, #40]
-	ldr	x1, [sp, #24]
+	str	x0, [sp, #16]
+	ldr	x0, [sp, #8]
+	ldr	x1, [sp, #16]
 	bl	_rt_get_item
-	str	x0, [sp, #32]
-	ldr	x0, [sp, #32]
+	str	x0, [sp, #24]
+	ldr	x0, [sp, #24]
 	ldp	x29, x30, [sp, #48]             ; 16-byte Folded Reload
 	add	sp, sp, #64
 	ret
@@ -48,100 +48,100 @@ ___init__:                              ; @__init__
 	adrp	x0, l_str.1@PAGE
 	add	x0, x0, l_str.1@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #312]
-	ldr	x8, [sp, #312]
+	str	x0, [sp, #240]
+	ldr	x8, [sp, #240]
 	str	x8, [sp]                        ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp]                        ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #168]
+	str	x0, [sp, #280]
 	bl	_rt_new_dict
-	str	x0, [sp, #136]
+	str	x0, [sp, #200]
 	adrp	x0, l_str.2@PAGE
 	add	x0, x0, l_str.2@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #120]
+	str	x0, [sp, #344]
 	adrp	x0, l_str.3@PAGE
 	add	x0, x0, l_str.3@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #192]
-	ldr	x0, [sp, #136]
-	ldr	x1, [sp, #120]
-	ldr	x2, [sp, #192]
+	str	x0, [sp, #256]
+	ldr	x0, [sp, #200]
+	ldr	x1, [sp, #344]
+	ldr	x2, [sp, #256]
 	bl	_rt_set_item
 	adrp	x0, l_str.4@PAGE
 	add	x0, x0, l_str.4@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #304]
+	str	x0, [sp, #232]
 	mov	w8, #25                         ; =0x19
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #352]
-	ldr	x0, [sp, #136]
-	ldr	x1, [sp, #304]
-	ldr	x2, [sp, #352]
+	str	x0, [sp, #112]
+	ldr	x0, [sp, #200]
+	ldr	x1, [sp, #232]
+	ldr	x2, [sp, #112]
 	bl	_rt_set_item
 	adrp	x0, l_str.5@PAGE
 	add	x0, x0, l_str.5@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #280]
+	str	x0, [sp, #152]
 	mov	w8, #100                        ; =0x64
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #264]
+	str	x0, [sp, #352]
 	bl	_rt_new_arr
-	str	x0, [sp, #296]
-	ldr	x0, [sp, #296]
-	ldr	x1, [sp, #264]
+	str	x0, [sp, #304]
+	ldr	x0, [sp, #304]
+	ldr	x1, [sp, #352]
 	bl	_rt_append_item
 	mov	w8, #95                         ; =0x5f
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #128]
-	ldr	x0, [sp, #296]
-	ldr	x1, [sp, #128]
+	str	x0, [sp, #88]
+	ldr	x0, [sp, #304]
+	ldr	x1, [sp, #88]
 	bl	_rt_append_item
 	mov	w8, #80                         ; =0x50
 	mov	x0, x8
 	bl	_rt_imm
 	str	x0, [sp, #208]
-	ldr	x0, [sp, #296]
+	ldr	x0, [sp, #304]
 	ldr	x1, [sp, #208]
 	bl	_rt_append_item
-	ldr	x0, [sp, #136]
-	ldr	x1, [sp, #280]
-	ldr	x2, [sp, #296]
+	ldr	x0, [sp, #200]
+	ldr	x1, [sp, #152]
+	ldr	x2, [sp, #304]
 	bl	_rt_set_item
 	adrp	x0, l_str.6@PAGE
 	add	x0, x0, l_str.6@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #240]
+	str	x0, [sp, #224]
 	mov	w8, #1                          ; =0x1
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #328]
-	ldr	x0, [sp, #136]
-	ldr	x1, [sp, #240]
-	ldr	x2, [sp, #328]
+	str	x0, [sp, #168]
+	ldr	x0, [sp, #200]
+	ldr	x1, [sp, #224]
+	ldr	x2, [sp, #168]
 	bl	_rt_set_item
-	ldr	x8, [sp, #136]
-	str	x8, [sp, #152]
+	ldr	x8, [sp, #200]
+	str	x8, [sp, #320]
 	adrp	x0, l_str.7@PAGE
 	add	x0, x0, l_str.7@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #112]
-	ldr	x8, [sp, #112]
+	str	x0, [sp, #296]
+	ldr	x8, [sp, #296]
 	str	x8, [sp, #8]                    ; 8-byte Folded Spill
 	adrp	x0, l_str.8@PAGE
 	add	x0, x0, l_str.8@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #144]
-	ldr	x0, [sp, #152]
-	ldr	x1, [sp, #144]
+	str	x0, [sp, #216]
+	ldr	x0, [sp, #320]
+	ldr	x1, [sp, #216]
 	bl	_rt_get_item
-	str	x0, [sp, #232]
-	ldr	x8, [sp, #232]
+	str	x0, [sp, #80]
+	ldr	x8, [sp, #80]
 	str	x8, [sp, #16]                   ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp, #8]                    ; 8-byte Folded Reload
@@ -149,17 +149,17 @@ ___init__:                              ; @__init__
 	ldr	x0, [sp, #16]                   ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #272]
+	str	x0, [sp, #288]
 	adrp	x0, l_str.9@PAGE
 	add	x0, x0, l_str.9@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #320]
-	ldr	x8, [sp, #320]
+	str	x0, [sp, #96]
+	ldr	x8, [sp, #96]
 	str	x8, [sp, #24]                   ; 8-byte Folded Spill
-	ldr	x0, [sp, #152]
+	ldr	x0, [sp, #320]
 	bl	_get_first_score
-	str	x0, [sp, #176]
-	ldr	x8, [sp, #176]
+	str	x0, [sp, #360]
+	ldr	x8, [sp, #360]
 	str	x8, [sp, #32]                   ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp, #24]                   ; 8-byte Folded Reload
@@ -167,65 +167,65 @@ ___init__:                              ; @__init__
 	ldr	x0, [sp, #32]                   ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #80]
+	str	x0, [sp, #192]
 	adrp	x0, l_str.10@PAGE
 	add	x0, x0, l_str.10@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #224]
-	ldr	x8, [sp, #224]
+	str	x0, [sp, #272]
+	ldr	x8, [sp, #272]
 	str	x8, [sp, #40]                   ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp, #40]                   ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #248]
+	str	x0, [sp, #264]
 	adrp	x0, l_str.11@PAGE
 	add	x0, x0, l_str.11@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #96]
+	str	x0, [sp, #160]
 	mov	w8, #2                          ; =0x2
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #88]
+	str	x0, [sp, #120]
 	mov	w8, #99                         ; =0x63
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #184]
-	ldr	x0, [sp, #152]
-	ldr	x1, [sp, #96]
+	str	x0, [sp, #104]
+	ldr	x0, [sp, #320]
+	ldr	x1, [sp, #160]
 	bl	_rt_get_item
-	str	x0, [sp, #360]
-	ldr	x0, [sp, #360]
-	ldr	x1, [sp, #88]
-	ldr	x2, [sp, #184]
+	str	x0, [sp, #176]
+	ldr	x0, [sp, #176]
+	ldr	x1, [sp, #120]
+	ldr	x2, [sp, #104]
 	bl	_rt_set_item
 	adrp	x0, l_str.12@PAGE
 	add	x0, x0, l_str.12@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #256]
+	str	x0, [sp, #336]
 	adrp	x0, l_str.13@PAGE
 	add	x0, x0, l_str.13@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #344]
-	ldr	x0, [sp, #152]
-	ldr	x1, [sp, #256]
-	ldr	x2, [sp, #344]
+	str	x0, [sp, #128]
+	ldr	x0, [sp, #320]
+	ldr	x1, [sp, #336]
+	ldr	x2, [sp, #128]
 	bl	_rt_set_item
 	adrp	x0, l_str.14@PAGE
 	add	x0, x0, l_str.14@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #288]
-	ldr	x8, [sp, #288]
+	str	x0, [sp, #328]
+	ldr	x8, [sp, #328]
 	str	x8, [sp, #48]                   ; 8-byte Folded Spill
 	adrp	x0, l_str.15@PAGE
 	add	x0, x0, l_str.15@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #104]
-	ldr	x0, [sp, #152]
-	ldr	x1, [sp, #104]
+	str	x0, [sp, #248]
+	ldr	x0, [sp, #320]
+	ldr	x1, [sp, #248]
 	bl	_rt_get_item
-	str	x0, [sp, #200]
-	ldr	x8, [sp, #200]
+	str	x0, [sp, #136]
+	ldr	x8, [sp, #136]
 	str	x8, [sp, #56]                   ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp, #48]                   ; 8-byte Folded Reload
@@ -233,14 +233,14 @@ ___init__:                              ; @__init__
 	ldr	x0, [sp, #56]                   ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #216]
+	str	x0, [sp, #184]
 	adrp	x0, l_str.16@PAGE
 	add	x0, x0, l_str.16@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #336]
-	ldr	x8, [sp, #336]
+	str	x0, [sp, #144]
+	ldr	x8, [sp, #144]
 	str	x8, [sp, #64]                   ; 8-byte Folded Spill
-	ldr	x8, [sp, #152]
+	ldr	x8, [sp, #320]
 	str	x8, [sp, #72]                   ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp, #64]                   ; 8-byte Folded Reload
@@ -248,7 +248,7 @@ ___init__:                              ; @__init__
 	ldr	x0, [sp, #72]                   ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #160]
+	str	x0, [sp, #312]
 	mov	x0, #0                          ; =0x0
 	ldp	x29, x30, [sp, #384]            ; 16-byte Folded Reload
 	ldp	x28, x27, [sp, #368]            ; 16-byte Folded Reload

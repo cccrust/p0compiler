@@ -14,12 +14,12 @@ _fact:                                  ; @fact
 	mov	w8, #2                          ; =0x2
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #16]
-	ldr	x0, [sp, #24]
-	ldr	x1, [sp, #16]
-	bl	_rt_cmp_lt
 	str	x0, [sp]
-	ldr	x0, [sp]
+	ldr	x0, [sp, #24]
+	ldr	x1, [sp]
+	bl	_rt_cmp_lt
+	str	x0, [sp, #16]
+	ldr	x0, [sp, #16]
 	bl	_rt_is_truthy
 	tbz	w0, #0, LBB0_2
 	b	LBB0_1
@@ -36,19 +36,19 @@ LBB0_2:                                 ; %L1
 	mov	w8, #1                          ; =0x1
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #8]
-	ldr	x0, [sp, #24]
-	ldr	x1, [sp, #8]
-	bl	_rt_sub
 	str	x0, [sp, #32]
-	ldr	x0, [sp, #32]
-	bl	_fact
-	str	x0, [sp, #48]
 	ldr	x0, [sp, #24]
-	ldr	x1, [sp, #48]
-	bl	_rt_mul
+	ldr	x1, [sp, #32]
+	bl	_rt_sub
+	str	x0, [sp, #48]
+	ldr	x0, [sp, #48]
+	bl	_fact
 	str	x0, [sp, #40]
-	ldr	x0, [sp, #40]
+	ldr	x0, [sp, #24]
+	ldr	x1, [sp, #40]
+	bl	_rt_mul
+	str	x0, [sp, #8]
+	ldr	x0, [sp, #8]
 	ldp	x29, x30, [sp, #64]             ; 16-byte Folded Reload
 	add	sp, sp, #80
 	ret
@@ -67,17 +67,17 @@ ___init__:                              ; @__init__
 	adrp	x0, l_str.0@PAGE
 	add	x0, x0, l_str.0@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #56]
-	ldr	x8, [sp, #56]
+	str	x0, [sp, #120]
+	ldr	x8, [sp, #120]
 	str	x8, [sp, #8]                    ; 8-byte Folded Spill
 	mov	w8, #5                          ; =0x5
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #104]
-	ldr	x0, [sp, #104]
+	str	x0, [sp, #56]
+	ldr	x0, [sp, #56]
 	bl	_fact
-	str	x0, [sp, #64]
-	ldr	x8, [sp, #64]
+	str	x0, [sp, #112]
+	ldr	x8, [sp, #112]
 	str	x8, [sp, #16]                   ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp, #8]                    ; 8-byte Folded Reload
@@ -85,32 +85,32 @@ ___init__:                              ; @__init__
 	ldr	x0, [sp, #16]                   ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #48]
+	str	x0, [sp, #80]
 	adrp	x0, l_str.1@PAGE
 	add	x0, x0, l_str.1@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #88]
-	ldr	x8, [sp, #88]
+	str	x0, [sp, #72]
+	ldr	x8, [sp, #72]
 	str	x8, [sp, #24]                   ; 8-byte Folded Spill
 	mov	w8, #10                         ; =0xa
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #112]
+	str	x0, [sp, #104]
 	mov	w8, #20                         ; =0x14
 	mov	x0, x8
 	bl	_rt_imm
-	str	x0, [sp, #120]
-	ldr	x0, [sp, #112]
-	ldr	x1, [sp, #120]
+	str	x0, [sp, #64]
+	ldr	x0, [sp, #104]
+	ldr	x1, [sp, #64]
 	bl	_rt_add
-	str	x0, [sp, #96]
-	ldr	x8, [sp, #96]
+	str	x0, [sp, #48]
+	ldr	x8, [sp, #48]
 	str	x8, [sp, #32]                   ; 8-byte Folded Spill
 	adrp	x0, l_str.2@PAGE
 	add	x0, x0, l_str.2@PAGEOFF
 	bl	_rt_load_str
-	str	x0, [sp, #80]
-	ldr	x8, [sp, #80]
+	str	x0, [sp, #88]
+	ldr	x8, [sp, #88]
 	str	x8, [sp, #40]                   ; 8-byte Folded Spill
 	bl	_rt_print_begin
 	ldr	x0, [sp, #24]                   ; 8-byte Folded Reload
@@ -120,7 +120,7 @@ ___init__:                              ; @__init__
 	ldr	x0, [sp, #40]                   ; 8-byte Folded Reload
 	bl	_rt_print_arg
 	bl	_rt_print_end
-	str	x0, [sp, #72]
+	str	x0, [sp, #96]
 	mov	x0, #0                          ; =0x0
 	ldp	x29, x30, [sp, #128]            ; 16-byte Folded Reload
 	add	sp, sp, #144
