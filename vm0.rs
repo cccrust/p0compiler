@@ -12,14 +12,15 @@ use std::time::{SystemTime, UNIX_EPOCH};
 // 1. 核心資料結構與動態型別 (Value)
 // =========================================================
 
+/// 表示虛擬機中支援的所有動態資料型別
 #[derive(Clone)]
 pub enum Value {
     Null,
     Int(i64),
     Float(f64),
     String(String),
-    Array(Rc<RefCell<Vec<Value>>>),
-    Dict(Rc<RefCell<HashMap<String, Value>>>),
+    Array(Rc<RefCell<Vec<Value>>>),            // 陣列，使用 Rc<RefCell> 支援內部共享與可變性
+    Dict(Rc<RefCell<HashMap<String, Value>>>), // 字典 (雜湊表)
 }
 
 impl fmt::Display for Value {
@@ -44,6 +45,7 @@ impl fmt::Display for Value {
 }
 
 impl Value {
+    /// 判斷該值在條件判斷 (if/while) 中是否視為「真」(truthy)
     fn is_truthy(&self) -> bool {
         match self {
             Value::Null => false,
@@ -55,6 +57,7 @@ impl Value {
         }
     }
 
+    /// 將該值嘗試轉換為整數 (若轉換失敗則回傳 0)
     fn to_int(&self) -> i64 {
         match self {
             Value::Int(n) => *n,
@@ -69,6 +72,7 @@ impl Value {
 // 2. 虛擬機核心 (Virtual Machine)
 // =========================================================
 
+/// 四元式 (Quadruple) 結構，表示虛擬機執行的基本指令單位
 #[derive(Clone)]
 pub struct Quad {
     pub op: String,
@@ -77,20 +81,22 @@ pub struct Quad {
     pub result: String,
 }
 
+/// 函數呼叫時的執行堆疊幀 (Call Frame)
 struct Frame {
-    vars: HashMap<String, Value>,
-    ret_pc: usize,
-    ret_var: String,
-    incoming_args: Vec<Value>,
-    formal_idx: usize,
+    vars: HashMap<String, Value>, // 該層函數內的區域變數表
+    ret_pc: usize,                // 函數結束後返回的程式計數器 (Program Counter) 下一個指令位置
+    ret_var: String,              // 呼叫者用來接收回傳值的暫存變數名稱
+    incoming_args: Vec<Value>,    // 準備傳遞給被呼叫函數的實際參數列表
+    formal_idx: usize,            // 用於將實際參數與形式參數逐一綁定的索引計數器
 }
 
+/// p0 語言的虛擬機核心引擎
 pub struct VM {
-    quads: Vec<Quad>,
-    string_pool: Vec<String>,
-    stack: Vec<Frame>,
-    label_map: HashMap<String, usize>, // 用於儲存標籤與 PC 行號的對應
-    func_map: HashMap<String, usize>,  // 用於儲存函數與 PC 行號的對應
+    quads: Vec<Quad>,                  // 載入的所有四元式指令序列
+    string_pool: Vec<String>,          // 字串常數池
+    stack: Vec<Frame>,                 // 函數呼叫堆疊 (Call Stack)
+    label_map: HashMap<String, usize>, // 用於尋找跳轉目標的標籤表 (Label -> 指令索引)
+    func_map: HashMap<String, usize>,  // 用於尋找自訂函數進入點的函數表 (Function Name -> 指令索引)
 }
 
 impl VM {
@@ -112,7 +118,7 @@ impl VM {
         vm
     }
 
-    // 掃描一次 Quad，將所有的函數與標籤建立索引對應表
+    /// 掃描一次所有的指令，將所有的自訂函數宣告與標籤對應的程式指針計數器 (PC) 位置建立索引
     fn build_maps(&mut self) {
         for (i, q) in self.quads.iter().enumerate() {
             if q.op == "FUNC_BEG" {
@@ -125,17 +131,20 @@ impl VM {
         }
     }
 
+    /// 從目前的堆疊幀取得變數；若名稱為「-」或是純數字，則回傳對應的常數值
     fn get_var(&self, name: &str) -> Value {
         if name == "-" { return Value::Int(0); }
         if let Ok(n) = name.parse::<i64>() { return Value::Int(n); }
         self.stack.last().unwrap().vars.get(name).cloned().unwrap_or(Value::Null)
     }
 
+    /// 將變數的值存入目前的堆疊幀中 (忽略無用目標像是 "-" 和 "?")
     fn set_var(&mut self, name: &str, val: Value) {
         if name == "-" || name == "?" { return; }
         self.stack.last_mut().unwrap().vars.insert(name.to_string(), val);
     }
 
+    /// 處理所有的內建系統函數 (System Calls)，例如 print、len、push、等陣列字串操作
     fn system_call(&mut self, f_name: &str, args: &mut Vec<Value>) -> Option<Value> {
         match f_name {
             "print" => {
@@ -241,6 +250,7 @@ impl VM {
         }
     }
 
+    /// 虛擬機主執行迴圈：依序解譯每個四元式的中間指令並執行操作
     pub fn run(&mut self) {
         let mut pc = 0;
         let mut param_stack: Vec<Value> = Vec::new();
@@ -410,7 +420,8 @@ impl VM {
 // 3. 檔案解析與啟動
 // =========================================================
 
-// 將 {:?} 格式的字串還原為正常字串（例如將 \" 轉回 " ， \n 轉回換行）
+/// 將 `{:?}` (Debug) 格式的字串還原為正常的字串實體
+/// （例如剝離頭尾雙引號，將 `"\\n"` 轉為實際的換行字元 `\n`）
 fn parse_debug_str(s: &str) -> String {
     if s.len() < 2 { return String::new(); }
     let mut res = String::new();
@@ -437,6 +448,7 @@ fn parse_debug_str(s: &str) -> String {
     res
 }
 
+/// 虛擬機進入點：從命令列引數讀取 `.ir0` 檔案，解析成字串池和指令序列後載入執行
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {

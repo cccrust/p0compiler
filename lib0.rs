@@ -7,14 +7,15 @@ use std::process;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 // 為了對接 C ABI (LLVM)，我們將 Array 和 Dict 內部也改為儲存指標 (*mut Value)
+// 這使得我們能在編譯後的 Native 程式碼 (LLVM 生成) 中自由傳遞動態型別變數的指標
 #[derive(Clone)]
 pub enum Value {
     Null,
     Int(i64),
     Float(f64),
     String(String),
-    Array(Vec<*mut Value>),
-    Dict(HashMap<String, *mut Value>),
+    Array(Vec<*mut Value>),           // 陣列：裝載其他 Value 的 C 指標
+    Dict(HashMap<String, *mut Value>),// 字典：字串到 Value C 指標的映射表
 }
 
 impl Value {
@@ -27,6 +28,7 @@ impl Value {
         }
     }
 
+    /// 判斷目前 Value 在邏輯上是否為真 (truthy)
     fn is_truthy(&self) -> bool {
         match self {
             Value::Null => false,
@@ -65,12 +67,14 @@ impl Value {
 // 記憶體管理輔助函數
 // ==========================================
 
-// 將 Value 配置到 Heap 上，並回傳 C 指標供 LLVM 使用
+// 將 Value 配置到 Heap (堆積) 上，並回傳 C 格式的裸指標 (Raw Pointer) 供 LLVM 使用
+// 由於 Box::into_raw 會放棄 Rust 的記憶體所有權，該變數的生命週期將由外部（此處即編譯後的執行檔）決定
 fn alloc_value(v: Value) -> *mut Value {
     Box::into_raw(Box::new(v))
 }
 
-// 將 C 指標轉回 Rust 的可變參考 (略過 null 防呆)
+// 將 C 裸指標轉回 Rust 的可變參考 (Mutable Reference)
+// 若指標為 null，則安全地回傳一個預設 Null 值的靜態參照以防止 Segmentation Fault
 unsafe fn deref_val<'a>(ptr: *mut Value) -> &'a mut Value {
     if ptr.is_null() {
         Box::leak(Box::new(Value::Null))
@@ -85,6 +89,7 @@ thread_local! {
 
 // ==========================================
 // Runtime API (供 LLVM IR 呼叫，必須使用 #[no_mangle] 和 extern "C")
+// 這些函數不僅在 p0 中呼叫，最終也會被連結 (link) 到 LLVM 生成的可執行檔中
 // ==========================================
 
 #[no_mangle]
@@ -100,6 +105,7 @@ pub unsafe extern "C" fn rt_load_str(s: *const c_char) -> *mut Value {
 
 #[no_mangle]
 pub unsafe extern "C" fn rt_add(v1: *mut Value, v2: *mut Value) -> *mut Value {
+    // 解離指標取得實體，呼叫 to_int 處理整數計算，最後再包裹回 C 指標
     alloc_value(Value::Int(deref_val(v1).to_int() + deref_val(v2).to_int()))
 }
 
@@ -140,6 +146,7 @@ pub unsafe extern "C" fn rt_cmp_gt(v1: *mut Value, v2: *mut Value) -> *mut Value
 
 #[no_mangle]
 pub extern "C" fn rt_new_arr() -> *mut Value {
+    // 創建一個空的內部指標陣列
     alloc_value(Value::Array(Vec::new()))
 }
 
@@ -161,6 +168,7 @@ pub unsafe extern "C" fn rt_init_arr(val: *mut Value, size: *mut Value) -> *mut 
 
 #[no_mangle]
 pub unsafe extern "C" fn rt_append_item(arr: *mut Value, val: *mut Value) {
+    // 針對特定的 Array 指標推進新的資料
     if let Value::Array(a) = deref_val(arr) {
         a.push(val);
     }
@@ -358,12 +366,14 @@ pub unsafe extern "C" fn rt_print_arg(v: *mut Value) {
 
 #[no_mangle]
 pub extern "C" fn rt_print_end() -> *mut Value {
+    // 收尾工作：將累積的所有字串透過空白連接，並一次印出附帶換行
     PRINT_BUF.with(|buf| println!("{}", buf.borrow().join(" ")));
     alloc_value(Value::Int(0))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn print(v: *mut Value) -> *mut Value {
+    // 單一參數的基礎列印函數
     rt_print_begin();
     rt_print_arg(v);
     rt_print_end()

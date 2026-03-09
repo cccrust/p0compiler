@@ -4,6 +4,8 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::process;
 
+/// 四元式 (Quadruple) 結構，用來表示一行中間碼 (IR)
+/// 包含操作碼 (op)、兩個運算元 (arg1, arg2) 與結果 (result)
 #[derive(Clone, Debug)]
 pub struct Quad {
     pub op: String,
@@ -12,13 +14,15 @@ pub struct Quad {
     pub result: String,
 }
 
+/// 目標編譯類型，決定最後要輸出為主程式 (Bin) 或是函式庫 (Lib)
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum TargetKind {
-    Bin,
-    Lib,
+    Bin, // 產生 main 函式與執行檔入口
+    Lib, // 僅產生函式，無 main 進入點
 }
 
-// 將字串格式化為 LLVM 接受的 C-String 格式 (例如將換行轉為 \0A，並加上 \00 結尾)
+/// 將字串格式化為 LLVM 接受的 C-String 格式
+/// 例如：將換行轉為 `\0A`，並在結尾加上 `\00` 代表 C 字串結束符
 fn escape_llvm_str(s: &str) -> String {
     let mut res = String::new();
     for b in s.bytes() {
@@ -32,7 +36,8 @@ fn escape_llvm_str(s: &str) -> String {
     res
 }
 
-// 解析從 ir0 讀入的 {:?} 格式字串
+/// 解析從 .ir0 檔案讀入的 `{:?}` (Debug) 格式的字串常數
+/// 將其中的跳脫字元 (如 `\n`, `\t`) 還原回實際的 ASCII 字元
 fn parse_debug_str(s: &str) -> String {
     if s.len() < 2 { return String::new(); }
     let mut res = String::new();
@@ -56,37 +61,42 @@ fn parse_debug_str(s: &str) -> String {
     res
 }
 
+/// LLVM IR 產生器，負責將中介四元式轉換為 LLVM 組語格式 (.ll)
 struct LLVMGenerator {
-    quads: Vec<Quad>,
-    string_pool: Vec<String>,
-    target: TargetKind,
-    out: String,
-    tmp_counter: usize,
-    lbl_counter: usize,
+    quads: Vec<Quad>,         // 輸入的中介碼序列
+    string_pool: Vec<String>, // 字串常數池
+    target: TargetKind,       // 編譯目標 (Bin 或 Lib)
+    out: String,              // 最終生成的 LLVM IR 字串
+    tmp_counter: usize,       // 暫存器計數器，用於產生 %tmp.1, %tmp.2 等
+    lbl_counter: usize,       // 標籤計數器，用於產生不重複的 fallthrough.1 標籤
 }
 
 impl LLVMGenerator {
+    /// 初始化產生器
     fn new(quads: Vec<Quad>, string_pool: Vec<String>, target: TargetKind) -> Self {
         LLVMGenerator { quads, string_pool, target, out: String::new(), tmp_counter: 0, lbl_counter: 0 }
     }
 
+    /// 產生下一個區域暫存器名稱 (例如 `%tmp.1`)
     fn next_tmp(&mut self) -> String {
         self.tmp_counter += 1;
         format!("%tmp.{}", self.tmp_counter)
     }
 
+    /// 產生下一個控制流的落點標籤 (例如 `fallthrough.1`)
     fn next_lbl(&mut self) -> String {
         self.lbl_counter += 1;
         format!("fallthrough.{}", self.lbl_counter)
     }
 
-    // 將變數從堆疊中 load 出來，回傳 LLVM 的暫存器名稱 (如 %tmp.1)
+    /// 將變數從堆疊中載入 (load) 出來，並回傳配置的 LLVM 暫存器名稱 (如 `%tmp.1`)
     fn load_var(&mut self, var: &str) -> String {
         let tmp = self.next_tmp();
         self.out.push_str(&format!("  {} = load ptr, ptr %ptr_{}\n", tmp, var));
         tmp
     }
 
+    /// 掃描指令區塊，收集所有被當作區域變數或參數使用的變數名稱
     fn collect_local_vars(&self, quads: &[Quad], include_ret_val_arg: bool) -> HashSet<String> {
         let mut local_vars: HashSet<String> = HashSet::new();
         for sq in quads {
@@ -115,15 +125,18 @@ impl LLVMGenerator {
         local_vars
     }
 
+    /// 將一段四元式指令區塊 (Block) 翻譯並發行為 LLVM IR
     fn emit_block(
         &mut self,
-        quads: &[Quad],
-        param_stack: &mut Vec<String>,
-        last_was_term: &mut bool,
-        ret_ptr: bool,
-        func_name_map: &HashMap<String, String>,
+        quads: &[Quad],                           // 要處理的指令範圍
+        param_stack: &mut Vec<String>,            // 當前準備用來傳遞給函式的參數堆疊
+        last_was_term: &mut bool,                 // 紀錄上一道指令是否為終止指令 (ret, br)
+        ret_ptr: bool,                            // 函式是否需要回傳指標 (ptr)
+        func_name_map: &HashMap<String, String>,  // 函式名稱的映射表 (處理 main 重新命名為 __p0_main)
     ) {
         for inner_q in quads {
+            // 在 LLVM 中，基本區塊 (Basic Block) 必須要有標籤。
+            // 若前一個區塊已用 br/ret 結尾，且接下來的指令不是標籤，則需要插入一個 dummy 標籤
             if *last_was_term && inner_q.op != "LABEL" {
                 let dummy = self.next_lbl();
                 self.out.push_str(&format!("{}:\n", dummy));
@@ -132,6 +145,7 @@ impl LLVMGenerator {
 
             match inner_q.op.as_str() {
                 "LABEL" => {
+                    // 基本區塊標籤，如果前面沒有斷開控制流，需先無條件跳轉進去
                     if !*last_was_term {
                         self.out.push_str(&format!("  br label %{}\n", inner_q.arg1));
                     }
@@ -139,16 +153,19 @@ impl LLVMGenerator {
                     *last_was_term = false;
                 }
                 "IMM" => {
+                    // 產生數字常數物件 (呼叫 C Runtime rt_imm)，並存入指標
                     let tmp = self.next_tmp();
                     self.out.push_str(&format!("  {} = call ptr @rt_imm(i64 {})\n", tmp, inner_q.arg1));
                     self.out.push_str(&format!("  store ptr {}, ptr %ptr_{}\n", tmp, inner_q.result));
                 }
                 "LOAD_STR" => {
+                    // 從字串常數池載入字串
                     let tmp = self.next_tmp();
                     self.out.push_str(&format!("  {} = call ptr @rt_load_str(ptr @str.{})\n", tmp, inner_q.arg1));
                     self.out.push_str(&format!("  store ptr {}, ptr %ptr_{}\n", tmp, inner_q.result));
                 }
                 op if ["ADD", "SUB", "MUL", "DIV", "CMP_EQ", "CMP_LT", "CMP_GT"].contains(&op) => {
+                    // 執行算術或比較操作，委派給 C Runtime
                     let v1 = self.load_var(&inner_q.arg1);
                     let v2 = self.load_var(&inner_q.arg2);
                     let tmp = self.next_tmp();
@@ -161,6 +178,8 @@ impl LLVMGenerator {
                     *last_was_term = true;
                 }
                 "JMP_F" => {
+                    // 條件跳躍 (If / While)：判斷條件是否為 truthy
+                    // 如果為真跳到 next_lbl 繼續執行，為假則跳離 (inner_q.result)
                     let cond = self.load_var(&inner_q.arg1);
                     let is_true = self.next_tmp();
                     self.out.push_str(&format!("  {} = call i1 @rt_is_truthy(ptr {})\n", is_true, cond));
@@ -269,8 +288,9 @@ impl LLVMGenerator {
         }
     }
 
+    /// 執行完整轉換，從宣告 Runtime API、分配變數，到轉換所有函式和頂層敘述
     pub fn generate(&mut self) {
-        // 1. 輸出 Runtime 函數宣告
+        // 1. 輸出 Runtime 函數宣告 (C 實作的系統與輔助函數)
         self.out.push_str("; === Runtime API Declarations ===\n");
         let rt_funcs = vec![
             "declare ptr @rt_imm(i64)",
@@ -311,7 +331,7 @@ impl LLVMGenerator {
         ];
         for f in rt_funcs { self.out.push_str(&format!("{}\n", f)); }
 
-        // 2. 尋找所有自訂函數的簽章與被呼叫的外部函數 (如 print, len)
+        // 2. 掃描四元式以尋找所有自訂函數的簽章與被呼叫的外部函數 (如 print, len)
         let mut defined_funcs = HashMap::new();
         let mut extern_funcs = HashSet::new();
         
@@ -349,7 +369,7 @@ impl LLVMGenerator {
             }
         }
 
-        // 宣告尚未定義的外部函數 (System calls)
+        // 宣告尚未定義的外部函數 (用 C 實作的外部 System calls)
         self.out.push_str("\n; === External System Calls ===\n");
         let builtin_funcs: HashSet<&str> = [
             "print", "len", "time", "array", "push", "pop", "keys", "has_key", "remove",
@@ -362,7 +382,7 @@ impl LLVMGenerator {
             }
         }
 
-        // 3. 輸出字串常數池
+        // 3. 輸出字串常數池 (將原始碼中的所有字串打包為全域常數陣列)
         self.out.push_str("\n; === String Pool ===\n");
         for (idx, s) in self.string_pool.iter().enumerate() {
             let escaped = escape_llvm_str(s);
@@ -370,7 +390,7 @@ impl LLVMGenerator {
             self.out.push_str(&format!("@str.{} = private unnamed_addr constant [{} x i8] c\"{}\"\n", idx, byte_len, escaped));
         }
 
-        // 4. 開始產生各個函數的 LLVM IR，並同時收集頂層指令
+        // 4. 開始產生各個函數的 LLVM IR，並同時收集不屬於任何函數的「頂層指令」
         self.out.push_str("\n; === Functions ===\n");
         let mut top_level_quads: Vec<Quad> = Vec::new();
         let mut pc = 0;
@@ -387,7 +407,7 @@ impl LLVMGenerator {
                     body_end += 1;
                 }
 
-                // 產生函數標頭
+                // 產生 LLVM 函數標頭 (Signature)
                 let args_str = formals.iter().map(|f| format!("ptr %arg_{}", f)).collect::<Vec<_>>().join(", ");
                 self.out.push_str(&format!("\ndefine ptr @{}({}) {{\nentry:\n", llvm_f_name, args_str));
 
@@ -420,7 +440,7 @@ impl LLVMGenerator {
             pc += 1;
         }
 
-        // 5. 產生初始化函式，執行函式外的頂層敘述
+        // 5. 產生初始化函式 `__init__`，用來執行全域的頂層敘述
         self.out.push_str("\n; === Program Init ===\n");
         self.out.push_str("\ndefine ptr @__init__() {\nentry:\n");
 
@@ -439,7 +459,7 @@ impl LLVMGenerator {
         }
         self.out.push_str("}\n");
 
-        // 6. bin 模式才輸出系統入口 main
+        // 6. 若為 Bin (執行檔) 模式，產生程式真正的進入點 `main`
         if self.target == TargetKind::Bin {
             self.out.push_str("\n; === Program Entry ===\n");
             self.out.push_str("\ndefine i32 @main() {\nentry:\n");
@@ -450,6 +470,7 @@ impl LLVMGenerator {
     }
 }
 
+/// 程式主要入口：處理參數、讀取 .ir0 檔案、解析並轉換出 .ll LLVM IR 檔案
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mut target = TargetKind::Bin;
@@ -523,6 +544,7 @@ fn main() {
         }
     }
 
+    // 3. 啟動 LLVM 生成器
     // println!("=== 開始轉換 LLVM IR ===");
     let mut generator = LLVMGenerator::new(quads, string_pool, target);
     generator.generate();
