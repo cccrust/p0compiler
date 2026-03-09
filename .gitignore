@@ -1,8 +1,10 @@
+.DS_Store
+**/.DS_Store
+
 *
 !/**/
 !*.*
 
-.DS_Store
 # library
 *.a
 *.o
